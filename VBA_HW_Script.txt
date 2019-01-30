@@ -1,0 +1,114 @@
+Sub StockCounter()
+
+    Dim WS As Worksheet
+    
+    For Each WS In Worksheets
+    
+        'Stores the value of the last row so our loop always ends at the right place
+        
+        Dim LastRow As Long
+        LastRow = WS.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        'Create variable to store current ticker
+        
+        Dim CurrentTicker As String
+        
+        'Instantiating counter variables and as well as variables for storing yearly open & close
+        
+        Dim TickerCount As Long
+        TickerCount = 2
+        
+        Dim TotalVolume As Long
+        TotalVolume = 0
+        
+        Dim YearlyOpen As Double
+        Dim YearlyClose As Double
+                
+        
+        For i = 2 To LastRow
+            
+            'If the current ticker value matches the next ticker value, all we want to do
+            '   is add to our total volume counter and set the yearly open if we're at the first record for the ticker.
+            '   We check for the yearly open by comparing the current ticker value to the previous one.
+            '   If they are different, we know it's the first yearly entry and we pull the open price.
+        
+            If WS.Cells(i, 1).Value = WS.Cells(i + 1, 1).Value Then
+                
+                
+                'Add the volume of the current entry to the total volume for the current ticker
+                
+                TotalVolume = TotalVolume + WS.Cells(i, 7).Value
+                
+                'If the total volume variable is at 0, then we know we're at the beginning of a new ticker
+                ' and need to store the yearly open price
+                
+                If WS.Cells(i - 1, 1).Value <> WS.Cells(i, 1).Value Then
+                    YearlyOpen = WS.Cells(i, 3).Value
+                End If
+                        
+                        
+            
+            'If the current ticker we're looking at doesn't match the next one, then we want to add the volume
+            '   for our final entry to the total store the current close value as the yearly close value, calculate the yearly & percent
+            '   changes, store the total volume we've been tracking, increment our counter variables, and
+            '   set our total volume counter back to 0
+            
+            Else
+            
+                'Pulls current ticker value and stores in summary table
+                
+                CurrentTicker = WS.Cells(i, 1).Value
+                WS.Cells(TickerCount, 9).Value = CurrentTicker
+                
+                'Stores final close price
+                
+                YearlyClose = WS.Cells(i, 6).Value
+                
+                'Adds last volume for ticker to total volume
+                
+                TotalVolume = TotalVolume + WS.Cells(i, 7).Value
+                
+                
+                
+                
+                'We want to make sure our total volume isn't 0 so we avoid running calculations on a ticker with no transactions
+                '   If total volume greater than 0, then we store total volume, calculate yearly change / percent change and store their values,
+                '   and set colors for yearly change field
+                
+                If (TotalVolume > 0) Then
+                    
+                    WS.Cells(TickerCount, 12).Value = TotalVolume
+                
+                    YearlyChange = YearlyClose - YearlyOpen
+                    WS.Cells(TickerCount, 10).Value = YearlyChange
+                    
+                    WS.Cells(TickerCount, 11).Value = YearlyChange / YearlyOpen
+                    WS.Cells(TickerCount, 11).NumberFormat = "0.00%"
+                    
+                    If YearlyChange > 0 Then
+                        
+                        WS.Cells(TickerCount, 10).Interior.ColorIndex = 4
+                    Else
+                        WS.Cells(TickerCount, 10).Interior.ColorIndex = 3
+                    End If
+                                       
+                Else
+                    
+                    WS.Cells(TickerCount, 12).Value = 0
+                    
+                End If
+                
+                'Increments ticker counter
+                
+                TickerCount = TickerCount + 1
+                
+                'Sets total volume back to zero
+                
+                TotalVolume = 0
+                
+            End If
+        Next i
+    Next WS
+       
+    
+End Sub
